@@ -29,6 +29,9 @@ async function run() {
     const tasks = client.db("micro_task").collection("tasks");
     const users = client.db("micro_task").collection("users");
     const withdrawCollection = client.db("micro_task").collection("withdraws");
+    const notificationCollections = client
+      .db("micro-task")
+      .collection("notifications");
     const submitedTaskCollection = client
       .db("micro_task")
       .collection("submitedTask");
@@ -71,6 +74,31 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const result = await tasks.deleteOne(filter);
+      res.send(result);
+    });
+    // purchase coins api
+    app.post("/purchaseCoins", async (req, res) => {
+      const data = req.body;
+      console.log(data);
+      const query = { email: data.email };
+      const findUser = await users.findOne(query);
+      const updateCoins = {
+        $set: {
+          coins: findUser.coins + data.coins,
+        },
+      };
+      const result = await users.updateOne(query, updateCoins);
+      res.send(result);
+    });
+    // NOTIFICATIONS APIS
+    app.get("/notification/:email", async (req, res) => {
+      const query = { toEmail: req.params.email };
+      const result = await notificationCollections.find(query).toArray();
+      res.send(result);
+    });
+    app.post("/notification", async (req, res) => {
+      const data = req.body;
+      const result = await notificationCollections.insertOne(data);
       res.send(result);
     });
     app.get("/taskReview/:email", async (req, res) => {
